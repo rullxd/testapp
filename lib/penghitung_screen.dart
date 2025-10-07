@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'Profile_screen.dart';
 
 class Penghitungscreen extends StatefulWidget {
   const Penghitungscreen({super.key});
@@ -16,6 +17,12 @@ class _PenghitungscreenState extends State<Penghitungscreen> {
     print("ini nilai = $nilai");
   }
 
+  pindahHalaman() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ProfilScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,6 +38,7 @@ class _PenghitungscreenState extends State<Penghitungscreen> {
               },
               child: Text("Hitung"),
             ),
+            TextButton(onPressed: () {}, child: Text("Pindah Profil")),
           ],
         ),
       ),
