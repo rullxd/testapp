@@ -19,7 +19,7 @@ class ProfilScreen extends StatelessWidget {
             Image.asset("assets/Logo for all crypto.jpeg", height: 200),
             const SizedBox(height: 16),
             const Text(
-              "Hiyosashii",
+              "Academy Coding",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 30,
@@ -29,7 +29,7 @@ class ProfilScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              "Alamat",
+              "Bio",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.blueGrey), // subjudul
             ),
