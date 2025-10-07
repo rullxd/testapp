@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'profile_screen.dart'; // pastikan nama file sudah diubah
+import 'profile_screen.dart';
 
 class Penghitungscreen extends StatefulWidget {
   const Penghitungscreen({super.key});
@@ -14,7 +14,6 @@ class _PenghitungscreenState extends State<Penghitungscreen> {
   menghitung() {
     setState(() {});
     nilai = nilai + 1;
-    print("ini nilai = $nilai");
   }
 
   pindahHalaman() {
@@ -36,13 +35,29 @@ class _PenghitungscreenState extends State<Penghitungscreen> {
               onPressed: () {
                 menghitung();
               },
-              child: Text("Hitung"),
+              child: const Text("Hitung"),
             ),
-            TextButton(
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
               onPressed: () {
                 pindahHalaman();
               },
-              child: Text("Pindah Profil"),
+              child: const Text("Profile"),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Home"),
             ),
           ],
         ),

@@ -6,9 +6,9 @@ class ProfilScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[50], // lebih soft
+      backgroundColor: Colors.blue[50],
       appBar: AppBar(
-        backgroundColor: Colors.indigo, // lebih kontras
+        backgroundColor: Colors.indigo,
         title: const Text("Profil"),
       ),
       body: Center(
@@ -23,7 +23,7 @@ class ProfilScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 30,
-                color: Colors.indigo, // judul lebih menonjol
+                color: Colors.indigo,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -31,7 +31,7 @@ class ProfilScreen extends StatelessWidget {
             const Text(
               "Bio",
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.blueGrey), // subjudul
+              style: TextStyle(color: Colors.blueGrey),
             ),
             const SizedBox(height: 16),
             Row(
@@ -43,25 +43,54 @@ class ProfilScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const ListTile(
-              leading: Icon(Icons.home),
-              title: Text("Alamat"),
-              subtitle: Text("Arabasta"),
-              trailing: Icon(Icons.arrow_circle_right),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const ListTile(
+                leading: Icon(Icons.home),
+                title: Text("Alamat"),
+                subtitle: Text("Arabasta"),
+                trailing: Icon(Icons.arrow_circle_right),
+              ),
             ),
             const SizedBox(height: 16),
-            const ListTile(
-              leading: Icon(Icons.home),
-              title: Text("Hobi"),
-              subtitle: Text("Game"),
-              trailing: Icon(Icons.arrow_circle_right),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const ListTile(
+                leading: Icon(Icons.home),
+                title: Text("Hobi"),
+                subtitle: Text("Game"),
+                trailing: Icon(Icons.arrow_circle_right),
+              ),
             ),
             const SizedBox(height: 16),
-            const ListTile(
-              leading: Icon(Icons.home),
-              title: Text("Umur"),
-              subtitle: Text("20"),
-              trailing: Icon(Icons.arrow_circle_right),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const ListTile(
+                leading: Icon(Icons.home),
+                title: Text("Umur"),
+                subtitle: Text("20"),
+                trailing: Icon(Icons.arrow_circle_right),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Home"),
             ),
           ],
         ),
