@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'Profile_screen.dart';
+import 'profile_screen.dart'; // pastikan nama file sudah diubah
 
 class Penghitungscreen extends StatefulWidget {
   const Penghitungscreen({super.key});
@@ -38,7 +38,12 @@ class _PenghitungscreenState extends State<Penghitungscreen> {
               },
               child: Text("Hitung"),
             ),
-            TextButton(onPressed: () {}, child: Text("Pindah Profil")),
+            TextButton(
+              onPressed: () {
+                pindahHalaman();
+              },
+              child: Text("Pindah Profil"),
+            ),
           ],
         ),
       ),
