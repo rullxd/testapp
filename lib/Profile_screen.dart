@@ -6,9 +6,9 @@ class ProfilScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueAccent,
+      backgroundColor: Colors.blue[50], // lebih soft
       appBar: AppBar(
-        backgroundColor: Colors.blueGrey,
+        backgroundColor: Colors.indigo, // lebih kontras
         title: const Text("Profil"),
       ),
       body: Center(
@@ -23,7 +23,7 @@ class ProfilScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 30,
-                color: Colors.white,
+                color: Colors.indigo, // judul lebih menonjol
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -31,7 +31,7 @@ class ProfilScreen extends StatelessWidget {
             const Text(
               "Alamat",
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: Colors.blueGrey), // subjudul
             ),
             const SizedBox(height: 16),
             Row(
