@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'profile_screen.dart';
+import 'home_screen.dart';
 
 class Penghitungscreen extends StatefulWidget {
   const Penghitungscreen({super.key});
@@ -19,7 +19,7 @@ class _PenghitungscreenState extends State<Penghitungscreen> {
   pindahHalaman() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => const ProfilScreen()));
+    ).push(MaterialPageRoute(builder: (_) => const HomeScreen()));
   }
 
   @override
@@ -45,17 +45,6 @@ class _PenghitungscreenState extends State<Penghitungscreen> {
               ),
               onPressed: () {
                 pindahHalaman();
-              },
-              child: const Text("Profile"),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
               },
               child: const Text("Home"),
             ),
