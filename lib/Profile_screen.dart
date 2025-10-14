@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ProfilScreen extends StatelessWidget {
-  const ProfilScreen({super.key});
+  const ProfilScreen({super.key, this.username});
+  final String? username;
 
   @override
   Widget build(BuildContext context) {
@@ -9,7 +10,7 @@ class ProfilScreen extends StatelessWidget {
       backgroundColor: Colors.blue[50],
       appBar: AppBar(
         backgroundColor: Colors.indigo,
-        title: const Text("Profil"),
+        title: Text("Profil $username "),
       ),
       body: Center(
         child: ListView(
@@ -90,7 +91,7 @@ class ProfilScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text("Home"),
+              child: const Text("Kembali"),
             ),
           ],
         ),

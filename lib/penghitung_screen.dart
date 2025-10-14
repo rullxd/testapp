@@ -48,6 +48,17 @@ class _PenghitungscreenState extends State<Penghitungscreen> {
               },
               child: const Text("Home"),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Kembali"),
+            ),
           ],
         ),
       ),
