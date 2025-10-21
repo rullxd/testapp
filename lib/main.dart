@@ -1,22 +1,41 @@
-import 'package:flutter/material.dart';
-import 'package:testapp/login_screen.dart';
+// lib/main.dart
 
-void main() {
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'utils/constants.dart';
+import 'utils/app_routes.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi local storage
+  await GetStorage.init();
+
+  // Inisialisasi Supabase
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+
   runApp(const MyApp());
 }
+
+// Supabase client global
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
+    return GetMaterialApp(
+      title: 'Flutter Supabase',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
       ),
-      home: const LoginScreen(),
+      initialRoute: AppRoutes.splash, // halaman awal
+      getPages: AppRoutes.routes, // daftar route
+      debugShowCheckedModeBanner: false,
     );
   }
 }

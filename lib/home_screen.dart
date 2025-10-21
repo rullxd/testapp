@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'profile_screen.dart';
+import 'screens/profile/profile_screen.dart';
 import 'penghitung_screen.dart';
 
 class HomeScreen extends StatelessWidget {
