@@ -17,6 +17,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
   bool _isLoading = false;
 
   Future<void> _signIn() async {
@@ -78,6 +79,11 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Text(
+                "LOGIN",
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
               TextField(
                 controller: usernameController,
                 decoration: const InputDecoration(
@@ -89,13 +95,29 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 10),
               TextField(
                 controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                obscureText:
+                    !_isPasswordVisible, // ✅ ubah dari true jadi tergantung state
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
                   labelText: "Password",
                   hintText: "Masukkan Password",
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible =
+                            !_isPasswordVisible; // ✅ toggle status
+                      });
+                    },
+                  ),
                 ),
+                onSubmitted: (_) => _signIn(), // ✅ tekan Enter untuk login
               ),
+
               const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,

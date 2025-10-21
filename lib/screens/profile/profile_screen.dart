@@ -21,7 +21,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
   bool _isLoading = true;
   bool _isEditing = false;
 
-  // Controller
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _hobbyController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
@@ -55,7 +54,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
       } else {
         Get.snackbar(
           'Info',
-          'Profil belum ditemukan. Silakan isi data profil.',
+          'Profil belum ditemukan.',
           backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
@@ -126,16 +125,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
       final hobby = _hobbyController.text.trim();
       final bio = _bioController.text.trim();
 
-      if (username.isEmpty && hobby.isEmpty && bio.isEmpty) {
-        Get.snackbar(
-          'Error',
-          'Semua field masih kosong!',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
       await _supabaseService.updateProfile(
         username: username,
         hobby: hobby,
@@ -181,60 +170,127 @@ class _ProfilScreenState extends State<ProfilScreen> {
       appBar: AppBar(
         backgroundColor: Colors.indigo,
         title: Text("Profil ${profile?.username ?? 'Pengguna'}"),
-        actions: [
-          IconButton(
-            onPressed: _signOut,
-            icon: const Icon(Icons.logout, color: Colors.white),
-          ),
-        ],
       ),
       body: Align(
         alignment: Alignment.topCenter,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
+          shrinkWrap: true,
           children: [
             GestureDetector(
-              onTap: _uploadAvatar,
+              onTap: _isEditing
+                  ? _uploadAvatar
+                  : null, // ⬅️ hanya aktif saat edit
               child: Center(
-                child: CircleAvatar(
-                  radius: 75,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage:
-                      (profile?.avatarUrl != null &&
-                          profile!.avatarUrl!.isNotEmpty)
-                      ? NetworkImage(profile.avatarUrl!)
-                      : null,
-                  child:
-                      (profile?.avatarUrl == null ||
-                          profile!.avatarUrl!.isEmpty)
-                      ? const Icon(Icons.person, size: 80, color: Colors.white)
-                      : null,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 70,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage:
+                          (_profile?.avatarUrl != null &&
+                              _profile!.avatarUrl!.isNotEmpty)
+                          ? NetworkImage(_profile!.avatarUrl!)
+                          : null,
+                      child:
+                          (_profile?.avatarUrl == null ||
+                              _profile!.avatarUrl!.isEmpty)
+                          ? const Icon(
+                              Icons.person,
+                              size: 80,
+                              color: Colors.white,
+                            )
+                          : null,
+                    ),
+
+                    // Tambahkan overlay kecil saat mode edit
+                    if (_isEditing)
+                      Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
-            Text(
-              profile?.username ?? "Belum ada nama",
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                color: Colors.indigo,
-                fontWeight: FontWeight.bold,
+            if (!_isEditing)
+              Text(
+                profile?.username ?? "Belum ada nama",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo,
+                ),
               ),
+            const SizedBox(height: 24),
+
+            // === TILES ===
+            if (_isEditing)
+              _buildTile(
+                Icons.person,
+                "Nama",
+                profile?.username ?? "-",
+                controller: _usernameController,
+                editable: _isEditing,
+              ),
+            if (_isEditing) const SizedBox(height: 16),
+            _buildTile(
+              Icons.info,
+              "Bio",
+              profile?.bio ?? "-",
+              controller: _bioController,
+              editable: _isEditing,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            _buildTile(
+              Icons.videogame_asset,
+              "Hobi",
+              profile?.hobby ?? "-",
+              controller: _hobbyController,
+              editable: _isEditing,
+            ),
+            const SizedBox(height: 16),
+            _buildTile(Icons.email, "Email", profile?.email ?? "-"),
+            const SizedBox(height: 24),
 
-            // ---------------------
-            // Bagian tampilan normal
-            // ---------------------
-            if (!_isEditing) ...[
-              _buildTile(Icons.info, "Bio", profile?.bio ?? "-"),
-              const SizedBox(height: 16),
-              _buildTile(Icons.videogame_asset, "Hobi", profile?.hobby ?? "-"),
-              const SizedBox(height: 16),
-              _buildTile(Icons.email, "Email", profile?.email ?? "-"),
-              const SizedBox(height: 24),
-
+            // === BUTTONS ===
+            // === BUTTONS ===
+            if (_isEditing) ...[
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                onPressed: _saveProfile,
+                icon: const Icon(Icons.save),
+                label: const Text("Simpan"),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                onPressed: () => setState(() => _isEditing = false),
+                icon: const Icon(Icons.cancel),
+                label: const Text("Batal"),
+              ),
+            ] else ...[
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
@@ -256,37 +312,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
                 icon: const Icon(Icons.logout),
                 label: const Text("Logout"),
               ),
-            ] else ...[
-              // ---------------------
-              // Mode Edit Inline
-              // ---------------------
-              _buildInputField("Nama", _usernameController),
-              const SizedBox(height: 12),
-              _buildInputField("Hobi", _hobbyController),
-              const SizedBox(height: 12),
-              _buildInputField("Bio", _bioController),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                onPressed: _saveProfile,
-                icon: const Icon(Icons.save),
-                label: const Text("Simpan"),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                onPressed: () => setState(() => _isEditing = false),
-                icon: const Icon(Icons.close),
-                label: const Text("Batal"),
-              ),
             ],
           ],
         ),
@@ -294,7 +319,13 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 
-  Widget _buildTile(IconData icon, String title, String subtitle) {
+  Widget _buildTile(
+    IconData icon,
+    String title,
+    String subtitle, {
+    TextEditingController? controller,
+    bool editable = false,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -303,20 +334,18 @@ class _ProfilScreenState extends State<ProfilScreen> {
       child: ListTile(
         leading: Icon(icon),
         title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_circle_right),
-      ),
-    );
-  }
-
-  Widget _buildInputField(String label, TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        subtitle: editable
+            ? TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: 'Masukkan $title',
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                ),
+              )
+            : Text(subtitle),
+        trailing: const Icon(Icons.add_circle_outline),
       ),
     );
   }

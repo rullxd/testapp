@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:testapp/screens/auth/login_screen.dart';
 import '../../main.dart';
-import '../profile/profile_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,7 +15,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
-  final TextEditingController hobbyController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   bool _isLoading = false;
 
@@ -39,6 +39,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final response = await supabase.auth.signUp(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
+        data: {
+          'username': usernameController.text
+              .trim(), // 🔹 kirim metadata ke Supabase
+        },
       );
 
       final user = response.user;
@@ -55,7 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       // 🔹 Arahkan langsung ke halaman Profile setelah register (opsional)
-      Get.offAll(() => const ProfilScreen());
+      Get.offAll(() => const LoginScreen());
     } on AuthException catch (e) {
       Get.snackbar(
         'Error',
@@ -95,15 +99,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 10),
               TextField(
-                controller: hobbyController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: "Hobi",
-                  hintText: "Masukkan Hobi",
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
                 controller: emailController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
@@ -114,13 +109,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 10),
               TextField(
                 controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                obscureText:
+                    !_isPasswordVisible, // ✅ ubah dari true jadi tergantung state
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
                   labelText: "Password",
                   hintText: "Masukkan Password",
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible =
+                            !_isPasswordVisible; // ✅ toggle status
+                      });
+                    },
+                  ),
                 ),
+                onSubmitted: (_) => _signUp(), // ✅ tekan Enter untuk login
               ),
+
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
