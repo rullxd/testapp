@@ -2,10 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:testapp/screens/auth/register_screen.dart';
+
 import '../../main.dart';
-import '../profile/profile_screen.dart';
+import '../../utils/app_routes.dart';
+// Jika kamu punya StorageKeys di constants.dart, import dan gunakan:
+// import '../../utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,34 +18,40 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final _emailC = TextEditingController();
+  final _passC = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
+  @override
+  void dispose() {
+    _emailC.dispose();
+    _passC.dispose();
+    super.dispose();
+  }
+
   Future<void> _signIn() async {
-    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Isi semua field terlebih dahulu',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // 🔹 Login Supabase menggunakan email (username dijadikan email di sini)
-      final response = await supabase.auth.signInWithPassword(
-        email: usernameController.text.trim(),
-        password: passwordController.text.trim(),
+      final resp = await supabase.auth.signInWithPassword(
+        email: _emailC.text.trim(),
+        password: _passC.text,
       );
 
-      if (response.user != null) {
-        // 🔹 Kalau berhasil login, pindah ke ProfileScreen
-        Get.offAll(() => const ProfilScreen());
+      if (resp.user != null) {
+        // Opsional: simpan flag lokal (Supabase sudah persist session)
+        final box = GetStorage();
+        await box.write('is_logged_in', true);
+        // Jika pakai constants.dart:
+        // await box.write(StorageKeys.isLoggedIn, true);
+
+        // Arahkan ke Home (atau Profile, sesuai kebutuhan rute kamu)
+        Get.offAllNamed(AppRoutes.home);
       } else {
         Get.snackbar(
           'Error',
@@ -53,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } on AuthException catch (e) {
       Get.snackbar(
-        'Error',
+        'Login gagal',
         e.message,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -61,79 +70,120 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Terjadi kesalahan tidak terduga',
+        'Terjadi kesalahan tak terduga',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final maxWidth = 420.0;
+
     return Scaffold(
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "LOGIN",
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 30),
-              TextField(
-                controller: usernameController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: "Email",
-                  hintText: "Masukkan Email",
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: passwordController,
-                obscureText:
-                    !_isPasswordVisible, // ✅ ubah dari true jadi tergantung state
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  labelText: "Password",
-                  hintText: "Masukkan Password",
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  const Text(
+                    'LOGIN',
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Email
+                  TextFormField(
+                    controller: _emailC,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Email',
+                      hintText: 'Masukkan Email',
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible =
-                            !_isPasswordVisible; // ✅ toggle status
-                      });
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Email wajib diisi';
+                      }
+                      final email = v.trim();
+                      final ok = RegExp(
+                        r'^[^@]+@[^@]+\.[^@]+$',
+                      ).hasMatch(email);
+                      if (!ok) return 'Format email tidak valid';
+                      return null;
                     },
                   ),
-                ),
-                onSubmitted: (_) => _signIn(), // ✅ tekan Enter untuk login
-              ),
+                  const SizedBox(height: 12),
 
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signIn,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Login"),
-                ),
+                  // Password
+                  TextFormField(
+                    controller: _passC,
+                    obscureText: !_isPasswordVisible,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      labelText: 'Password',
+                      hintText: 'Masukkan Password',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () => setState(
+                          () => _isPasswordVisible = !_isPasswordVisible,
+                        ),
+                      ),
+                    ),
+                    onFieldSubmitted: (_) => _signIn(),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Password wajib diisi';
+                      if (v.length < 6) return 'Minimal 6 karakter';
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Button Login
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _signIn,
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Login'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Link ke Register (pakai route kalau sudah didaftarkan)
+                  TextButton(
+                    onPressed: () {
+                      // Kalau ada route: Get.toNamed(AppRoutes.register);
+                      // Jika belum, dan kamu punya RegisterScreen:
+                      // Get.to(() => const RegisterScreen());
+                      Get.toNamed(AppRoutes.register);
+                    },
+                    child: const Text('Belum punya akun? Daftar di sini'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () => Get.to(() => const RegisterScreen()),
-                child: const Text("Belum punya akun? Daftar di sini"),
-              ),
-            ],
+            ),
           ),
         ),
       ),

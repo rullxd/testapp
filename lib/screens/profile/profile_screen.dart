@@ -40,11 +40,13 @@ class _ProfilScreenState extends State<ProfilScreen> {
   }
 
   Future<void> _loadProfile() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final data = await _supabaseService.getProfile();
       if (data != null) {
         final profile = Profile.fromJson(data);
+        if (!mounted) return;
         setState(() {
           _profile = profile;
           _usernameController.text = profile.username;
@@ -67,7 +69,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
         colorText: Colors.white,
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -77,8 +79,18 @@ class _ProfilScreenState extends State<ProfilScreen> {
     if (picked == null) return;
 
     try {
-      final fileName =
-          '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        Get.snackbar(
+          'Error',
+          'Sesi tidak valid. Silakan login ulang.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      final fileName = '$userId/${DateTime.now().millisecondsSinceEpoch}.jpg';
       String imageUrl;
 
       if (kIsWeb) {
@@ -120,15 +132,25 @@ class _ProfilScreenState extends State<ProfilScreen> {
   }
 
   Future<void> _saveProfile() async {
-    try {
-      final username = _usernameController.text.trim();
-      final hobby = _hobbyController.text.trim();
-      final bio = _bioController.text.trim();
+    final username = _usernameController.text.trim();
+    final hobby = _hobbyController.text.trim();
+    final bio = _bioController.text.trim();
 
+    if (username.isEmpty) {
+      Get.snackbar(
+        'Validasi',
+        'Nama tidak boleh kosong',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
       await _supabaseService.updateProfile(
         username: username,
-        hobby: hobby,
-        bio: bio,
+        hobby: hobby.isEmpty ? null : hobby,
+        bio: bio.isEmpty ? null : bio,
       );
 
       Get.snackbar(
@@ -138,6 +160,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
         colorText: Colors.white,
       );
 
+      if (!mounted) return;
       setState(() {
         _isEditing = false;
       });
@@ -178,9 +201,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
           shrinkWrap: true,
           children: [
             GestureDetector(
-              onTap: _isEditing
-                  ? _uploadAvatar
-                  : null, // ⬅️ hanya aktif saat edit
+              onTap: _isEditing ? _uploadAvatar : null, // aktif hanya saat edit
               child: Center(
                 child: Stack(
                   alignment: Alignment.center,
@@ -189,13 +210,13 @@ class _ProfilScreenState extends State<ProfilScreen> {
                       radius: 70,
                       backgroundColor: Colors.grey[300],
                       backgroundImage:
-                          (_profile?.avatarUrl != null &&
-                              _profile!.avatarUrl!.isNotEmpty)
-                          ? NetworkImage(_profile!.avatarUrl!)
+                          (profile?.avatarUrl != null &&
+                              (profile!.avatarUrl ?? '').isNotEmpty)
+                          ? NetworkImage(profile.avatarUrl!)
                           : null,
                       child:
-                          (_profile?.avatarUrl == null ||
-                              _profile!.avatarUrl!.isEmpty)
+                          (profile?.avatarUrl == null ||
+                              (profile!.avatarUrl ?? '').isEmpty)
                           ? const Icon(
                               Icons.person,
                               size: 80,
@@ -204,13 +225,14 @@ class _ProfilScreenState extends State<ProfilScreen> {
                           : null,
                     ),
 
-                    // Tambahkan overlay kecil saat mode edit
+                    // Overlay kecil saat mode edit
                     if (_isEditing)
                       Container(
                         width: 140,
                         height: 140,
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.4),
+
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -247,14 +269,17 @@ class _ProfilScreenState extends State<ProfilScreen> {
                 editable: _isEditing,
               ),
             if (_isEditing) const SizedBox(height: 16),
+
             _buildTile(
               Icons.info,
               "Bio",
               profile?.bio ?? "-",
               controller: _bioController,
               editable: _isEditing,
+              maxLines: 3,
             ),
             const SizedBox(height: 16),
+
             _buildTile(
               Icons.videogame_asset,
               "Hobi",
@@ -263,10 +288,10 @@ class _ProfilScreenState extends State<ProfilScreen> {
               editable: _isEditing,
             ),
             const SizedBox(height: 16),
+
             _buildTile(Icons.email, "Email", profile?.email ?? "-"),
             const SizedBox(height: 24),
 
-            // === BUTTONS ===
             // === BUTTONS ===
             if (_isEditing) ...[
               ElevatedButton.icon(
@@ -325,6 +350,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
     String subtitle, {
     TextEditingController? controller,
     bool editable = false,
+    int maxLines = 1,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -337,6 +363,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
         subtitle: editable
             ? TextField(
                 controller: controller,
+                maxLines: 1,
                 decoration: InputDecoration(
                   isDense: true,
                   hintText: 'Masukkan $title',
@@ -345,7 +372,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                 ),
               )
             : Text(subtitle),
-        trailing: const Icon(Icons.add_circle_outline),
+        trailing: editable ? const Icon(Icons.add_circle_outline) : null,
       ),
     );
   }

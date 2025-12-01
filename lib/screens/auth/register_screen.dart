@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:testapp/screens/auth/login_screen.dart';
 import '../../main.dart';
+import '../../utils/app_routes.dart'; // Tambahkan ini
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,13 +16,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   bool _isPasswordVisible = false;
-
   bool _isLoading = false;
 
   Future<void> _signUp() async {
-    if (emailController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        usernameController.text.isEmpty) {
+    // Validasi input
+    if (usernameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty) {
       Get.snackbar(
         'Error',
         'Semua field wajib diisi!',
@@ -32,50 +32,86 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
-
-    try {
-      // 🔹 Membuat akun baru di Supabase
-      final response = await supabase.auth.signUp(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-        data: {
-          'username': usernameController.text
-              .trim(), // 🔹 kirim metadata ke Supabase
-        },
-      );
-
-      final user = response.user;
-      if (user == null) throw Exception('Gagal membuat akun.');
-
-      // 🔹 Tidak perlu insert ke tabel profiles manual,
-      // karena sudah otomatis lewat trigger di Supabase.
-
-      Get.snackbar(
-        'Sukses',
-        'Akun berhasil dibuat! Silakan login.',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-
-      // 🔹 Arahkan langsung ke halaman Profile setelah register (opsional)
-      Get.offAll(() => const LoginScreen());
-    } on AuthException catch (e) {
+    if (passwordController.text.length < 6) {
       Get.snackbar(
         'Error',
-        e.message,
+        'Password minimal 6 karakter',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // 1. Sign up dengan Supabase Auth
+      final response = await supabase.auth.signUp(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+        data: {'username': usernameController.text.trim()},
+      );
+
+      final user = response.user;
+
+      if (user == null) {
+        throw Exception('User tidak dibuat.');
+      }
+
+      // 2. Create profile secara manual
+      try {
+        await supabase.from('profiles').insert({
+          'id': user.id,
+          'username': usernameController.text.trim(),
+          'email': emailController.text.trim(),
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (profileError) {
+        // Ignore jika profil sudah ada atau error kecil
+      }
+
+      Get.snackbar(
+        'Sukses!',
+        'Akun berhasil dibuat. Silakan login.',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      // Redirect ke login
+      Get.offAllNamed(AppRoutes.login);
+    } on AuthException catch (e) {
+      // Tampilkan error detail dari Supabase
+      String errorMessage = e.message;
+
+      // Translate common errors to Indonesian
+      if (e.message.contains('already registered')) {
+        errorMessage = 'Email sudah terdaftar. Gunakan email lain.';
+      } else if (e.message.contains('weak password')) {
+        errorMessage = 'Password terlalu lemah. Minimal 6 karakter.';
+      } else if (e.message.contains('invalid email')) {
+        errorMessage = 'Format email tidak valid.';
+      }
+
+      Get.snackbar(
+        'Gagal Mendaftar',
+        errorMessage,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 5),
+      );
     } catch (e) {
       Get.snackbar(
-        'Error',
-        e.toString(),
+        'Error System',
+        'Terjadi kesalahan: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -109,8 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 10),
               TextField(
                 controller: passwordController,
-                obscureText:
-                    !_isPasswordVisible, // ✅ ubah dari true jadi tergantung state
+                obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   labelText: "Password",
@@ -123,13 +158,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _isPasswordVisible =
-                            !_isPasswordVisible; // ✅ toggle status
+                        _isPasswordVisible = !_isPasswordVisible;
                       });
                     },
                   ),
                 ),
-                onSubmitted: (_) => _signUp(), // ✅ tekan Enter untuk login
+                onSubmitted: (_) => _signUp(),
               ),
 
               const SizedBox(height: 20),
